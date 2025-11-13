@@ -13,16 +13,17 @@ This skill provides searchable, curated documentation for building full-stack we
 
 ## Key Features
 
-- **24 comprehensive guides** covering setup, core concepts, patterns, deployment, migration, and troubleshooting
-- **Fully indexed documentation** with 24 searchable entries across two collections
+- **25 comprehensive guides** covering setup, core concepts, patterns, deployment, migration, and troubleshooting
+- **Modern remote functions guide** with type-safe server-client communication
+- **Fully indexed documentation** with 25 searchable entries across two collections
 - **Problem-focused approach** with ❌ vs ✅ code comparisons and decision rules
 - **Integration-specific guidance** for combining all three frameworks correctly
-- **18,881 lines of documentation** created specifically for this integration
+- **20,000+ lines of documentation** created specifically for this integration
 - **Research-first methodology** designed to prevent common integration mistakes
 
 ## Documentation Collections
 
-### `references/` - Problem-Focused Guides (17 files)
+### `references/` - Problem-Focused Guides (18 files)
 
 Curated guides addressing specific integration challenges:
 
@@ -37,7 +38,8 @@ Curated guides addressing specific integration challenges:
 - `data-loading.md` - Load functions and data flow
 
 **Forms & Styling:**
-- `forms-and-actions.md` - Progressive enhancement with form actions
+- `remote-functions.md` - Modern type-safe server-client communication (recommended)
+- `forms-and-actions.md` - Progressive enhancement with form actions (legacy)
 - `styling-with-tailwind.md` - Component styling patterns
 - `styling-patterns.md` - Advanced styling techniques
 
@@ -165,7 +167,26 @@ For complete search methodology, see `references/documentation-search-system.md`
 
 See: `references/svelte5-runes.md` - Server-Side Constraints
 
-### Progressive Enhancement with Forms
+### Remote Functions (Modern Approach)
+
+```svelte
+<script>
+  import { createContact } from './contact.server';
+  const contact = createContact.form();
+</script>
+
+<form {...contact.props}>
+  <input name="email" />
+  {#if contact.errors?.email}
+    <p>{contact.errors.email}</p>
+  {/if}
+  <button disabled={contact.submitting}>Submit</button>
+</form>
+```
+
+See: `references/remote-functions.md` - Complete Guide
+
+### Traditional Form Actions (Legacy)
 
 ```svelte
 <script>
@@ -184,7 +205,7 @@ See: `references/svelte5-runes.md` - Server-Side Constraints
 </form>
 ```
 
-See: `references/forms-and-actions.md` - Handling use:enhance Reactivity
+See: `references/forms-and-actions.md` - Traditional Form Actions
 
 ### Tailwind Class Purging
 
@@ -265,10 +286,10 @@ sveltekit-svelte5-tailwind-skill/
 
 ## Statistics
 
-- **Total Files**: 34 committed files
-- **Documentation Files**: 24 Markdown guides
-- **Total Lines**: 18,881 lines of documentation
-- **Indexed Entries**: 24 searchable documents
+- **Total Files**: 35 committed files
+- **Documentation Files**: 25 Markdown guides
+- **Total Lines**: 20,000+ lines of documentation
+- **Indexed Entries**: 25 searchable documents
 - **Collections**: 2 (references + docs)
 - **Search Depth**: H2-level sections for efficient retrieval
 
