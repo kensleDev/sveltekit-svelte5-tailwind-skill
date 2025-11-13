@@ -13,17 +13,18 @@ This skill provides searchable, curated documentation for building full-stack we
 
 ## Key Features
 
-- **25 comprehensive guides** covering setup, core concepts, patterns, deployment, migration, and troubleshooting
+- **26 comprehensive guides** covering setup, backends, core concepts, patterns, deployment, migration, and troubleshooting
+- **Convex backend integration** with real-time subscriptions using convex-svelte
 - **Modern remote functions guide** with type-safe server-client communication
-- **Fully indexed documentation** with 25 searchable entries across two collections
+- **Fully indexed documentation** with 26 searchable entries across two collections
 - **Problem-focused approach** with ❌ vs ✅ code comparisons and decision rules
-- **Integration-specific guidance** for combining all three frameworks correctly
-- **20,000+ lines of documentation** created specifically for this integration
+- **Integration-specific guidance** for combining frameworks and backends correctly
+- **21,200+ lines of documentation** created specifically for this integration
 - **Research-first methodology** designed to prevent common integration mistakes
 
 ## Documentation Collections
 
-### `references/` - Problem-Focused Guides (18 files)
+### `references/` - Problem-Focused Guides (19 files)
 
 Curated guides addressing specific integration challenges:
 
@@ -37,9 +38,13 @@ Curated guides addressing specific integration challenges:
 - `server-rendering.md` - SSR/SSG patterns
 - `data-loading.md` - Load functions and data flow
 
+**Backend & Data:**
+- `convex-integration.md` - Convex backend integration with real-time subscriptions
+- `remote-functions.md` - SvelteKit remote functions for type-safe communication
+- `data-loading.md` - Load functions and data flow
+
 **Forms & Styling:**
-- `remote-functions.md` - Modern type-safe server-client communication (recommended)
-- `forms-and-actions.md` - Progressive enhancement with form actions (legacy)
+- `forms-and-actions.md` - Progressive enhancement with form actions
 - `styling-with-tailwind.md` - Component styling patterns
 - `styling-patterns.md` - Advanced styling techniques
 
@@ -286,10 +291,10 @@ sveltekit-svelte5-tailwind-skill/
 
 ## Statistics
 
-- **Total Files**: 35 committed files
-- **Documentation Files**: 25 Markdown guides
-- **Total Lines**: 20,000+ lines of documentation
-- **Indexed Entries**: 25 searchable documents
+- **Total Files**: 36 committed files
+- **Documentation Files**: 26 Markdown guides
+- **Total Lines**: 21,200+ lines of documentation
+- **Indexed Entries**: 26 searchable documents
 - **Collections**: 2 (references + docs)
 - **Search Depth**: H2-level sections for efficient retrieval
 
