@@ -13,16 +13,18 @@ This skill provides searchable, curated documentation for building full-stack we
 
 ## Key Features
 
-- **24 comprehensive guides** covering setup, core concepts, patterns, deployment, migration, and troubleshooting
-- **Fully indexed documentation** with 24 searchable entries across two collections
+- **26 comprehensive guides** covering setup, backends, core concepts, patterns, deployment, migration, and troubleshooting
+- **Convex backend integration** with real-time subscriptions using convex-svelte
+- **Modern remote functions guide** with type-safe server-client communication
+- **Fully indexed documentation** with 26 searchable entries across two collections
 - **Problem-focused approach** with ❌ vs ✅ code comparisons and decision rules
-- **Integration-specific guidance** for combining all three frameworks correctly
-- **18,881 lines of documentation** created specifically for this integration
+- **Integration-specific guidance** for combining frameworks and backends correctly
+- **21,200+ lines of documentation** created specifically for this integration
 - **Research-first methodology** designed to prevent common integration mistakes
 
 ## Documentation Collections
 
-### `references/` - Problem-Focused Guides (17 files)
+### `references/` - Problem-Focused Guides (19 files)
 
 Curated guides addressing specific integration challenges:
 
@@ -34,6 +36,11 @@ Curated guides addressing specific integration challenges:
 - `svelte5-runes.md` - Svelte 5 runes system and SSR constraints
 - `routing-patterns.md` - File-based routing and layouts
 - `server-rendering.md` - SSR/SSG patterns
+- `data-loading.md` - Load functions and data flow
+
+**Backend & Data:**
+- `convex-integration.md` - Convex backend integration with real-time subscriptions
+- `remote-functions.md` - SvelteKit remote functions for type-safe communication
 - `data-loading.md` - Load functions and data flow
 
 **Forms & Styling:**
@@ -165,7 +172,26 @@ For complete search methodology, see `references/documentation-search-system.md`
 
 See: `references/svelte5-runes.md` - Server-Side Constraints
 
-### Progressive Enhancement with Forms
+### Remote Functions (Modern Approach)
+
+```svelte
+<script>
+  import { createContact } from './contact.server';
+  const contact = createContact.form();
+</script>
+
+<form {...contact.props}>
+  <input name="email" />
+  {#if contact.errors?.email}
+    <p>{contact.errors.email}</p>
+  {/if}
+  <button disabled={contact.submitting}>Submit</button>
+</form>
+```
+
+See: `references/remote-functions.md` - Complete Guide
+
+### Traditional Form Actions (Legacy)
 
 ```svelte
 <script>
@@ -184,7 +210,7 @@ See: `references/svelte5-runes.md` - Server-Side Constraints
 </form>
 ```
 
-See: `references/forms-and-actions.md` - Handling use:enhance Reactivity
+See: `references/forms-and-actions.md` - Traditional Form Actions
 
 ### Tailwind Class Purging
 
@@ -265,10 +291,10 @@ sveltekit-svelte5-tailwind-skill/
 
 ## Statistics
 
-- **Total Files**: 34 committed files
-- **Documentation Files**: 24 Markdown guides
-- **Total Lines**: 18,881 lines of documentation
-- **Indexed Entries**: 24 searchable documents
+- **Total Files**: 36 committed files
+- **Documentation Files**: 26 Markdown guides
+- **Total Lines**: 21,200+ lines of documentation
+- **Indexed Entries**: 26 searchable documents
 - **Collections**: 2 (references + docs)
 - **Search Depth**: H2-level sections for efficient retrieval
 

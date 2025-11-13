@@ -13,6 +13,62 @@ summary: "Build progressively enhanced forms with SvelteKit actions and Svelte 5
 
 SvelteKit form actions provide server-side form processing with progressive enhancement. Integrating them with Svelte 5 runes requires understanding how `use:enhance` affects reactivity and state management.
 
+## Modern Approach: Remote Functions
+
+**⚡ Recommended: Use SvelteKit's remote functions** for new projects. They provide better ergonomics, built-in validation, and eliminate the need for complex `use:enhance` callbacks.
+
+**Remote functions vs. Traditional form actions:**
+
+```svelte
+<!-- ✅ Modern: Remote functions (recommended) -->
+<script>
+  import { createContact } from './contact.server';
+  const contact = createContact.form();
+</script>
+
+<form {...contact.props}>
+  <input name="email" />
+  {#if contact.errors?.email}
+    <p>{contact.errors.email}</p>
+  {/if}
+  <button disabled={contact.submitting}>Submit</button>
+</form>
+```
+
+```svelte
+<!-- ⚙️ Traditional: Form actions (legacy) -->
+<script>
+  import { enhance } from '$app/forms';
+  let { form } = $props();
+  let submitting = $state(false);
+
+  const handleSubmit = enhance(() => {
+    submitting = true;
+    return async ({ result, update }) => {
+      submitting = false;
+      await update();
+    };
+  });
+</script>
+
+<form method="POST" use:handleSubmit>
+  <input name="email" />
+  {#if form?.error}<p>{form.error}</p>{/if}
+  <button disabled={submitting}>Submit</button>
+</form>
+```
+
+**Why remote functions?**
+- ✅ No complex `enhance` callbacks needed
+- ✅ Built-in validation with Zod/Valibot
+- ✅ Better TypeScript support
+- ✅ Automatic form state management
+- ✅ Optimistic updates with `.withOverride()`
+
+**See `remote-functions.md` for complete guide.**
+
+The rest of this document covers traditional form actions for legacy projects or when remote functions aren't suitable.
+
 ## Form Actions Quick Review
 
 Form actions run on the server and process form submissions without JavaScript.

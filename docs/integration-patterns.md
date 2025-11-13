@@ -531,6 +531,408 @@ export const actions = {
 };
 ```
 
+## Remote Functions Integration (Recommended)
+
+Modern approach using SvelteKit's remote functions for type-safe server-client communication.
+
+### Contact Form with Remote Functions
+
+```ts
+// routes/contact/contact.server.ts
+import { form } from '$app/server';
+import { z } from 'zod';
+
+const schema = z.object({
+	name: z.string().min(1, 'Name is required'),
+	email: z.string().email('Valid email required'),
+	message: z.string().min(10, 'Message must be at least 10 characters')
+});
+
+export const sendContact = form(schema, async (data) => {
+	// Send email (implementation depends on your email service)
+	await sendEmail(data);
+
+	return { success: true };
+});
+```
+
+```svelte
+<!-- routes/contact/+page.svelte -->
+<script>
+	import { sendContact } from './contact.server';
+
+	const contact = sendContact.form();
+</script>
+
+<div class="max-w-2xl mx-auto">
+	<h1 class="text-3xl font-bold mb-6">Contact Us</h1>
+
+	<form {...contact.props} class="space-y-6">
+		<div>
+			<label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+				Name
+			</label>
+			<input
+				id="name"
+				name="name"
+				type="text"
+				required
+				class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+				class:border-red-500={contact.errors?.name}
+			/>
+			{#if contact.errors?.name}
+				<p class="mt-1 text-sm text-red-600">{contact.errors.name}</p>
+			{/if}
+		</div>
+
+		<div>
+			<label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+				Email
+			</label>
+			<input
+				id="email"
+				name="email"
+				type="email"
+				required
+				class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+				class:border-red-500={contact.errors?.email}
+			/>
+			{#if contact.errors?.email}
+				<p class="mt-1 text-sm text-red-600">{contact.errors.email}</p>
+			{/if}
+		</div>
+
+		<div>
+			<label for="message" class="block text-sm font-medium text-gray-700 mb-1">
+				Message
+			</label>
+			<textarea
+				id="message"
+				name="message"
+				rows="4"
+				required
+				class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+				class:border-red-500={contact.errors?.message}
+			></textarea>
+			{#if contact.errors?.message}
+				<p class="mt-1 text-sm text-red-600">{contact.errors.message}</p>
+			{/if}
+		</div>
+
+		{#if contact.result?.success}
+			<div class="p-4 bg-green-50 border border-green-200 rounded">
+				<p class="text-green-800">Message sent successfully!</p>
+			</div>
+		{/if}
+
+		<button
+			type="submit"
+			disabled={contact.submitting}
+			class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600
+				disabled:bg-gray-400 disabled:cursor-not-allowed"
+		>
+			{contact.submitting ? 'Sending...' : 'Send Message'}
+		</button>
+	</form>
+</div>
+```
+
+### Todo App with Query and Command
+
+Complete CRUD example combining Query, Form, and Command.
+
+```ts
+// routes/todos/todos.server.ts
+import { query, form, command } from '$app/server';
+import { z } from 'zod';
+import { db } from '$lib/server/db';
+
+// Query: Get todos
+export const getTodos = query(async () => {
+	return await db.todo.findMany({
+		orderBy: { createdAt: 'desc' }
+	});
+});
+
+// Form: Create todo
+const createSchema = z.object({
+	text: z.string().min(1, 'Todo cannot be empty')
+});
+
+export const createTodo = form(createSchema, async (data) => {
+	const todo = await db.todo.create({
+		data: { text: data.text, completed: false }
+	});
+	return { todo };
+});
+
+// Command: Toggle completion
+const toggleSchema = z.object({
+	id: z.string()
+});
+
+export const toggleTodo = command(toggleSchema, async (data) => {
+	const todo = await db.todo.findUnique({ where: { id: data.id } });
+	const updated = await db.todo.update({
+		where: { id: data.id },
+		data: { completed: !todo.completed }
+	});
+	return { todo: updated };
+});
+
+// Command: Delete todo
+export const deleteTodo = command(toggleSchema, async (data) => {
+	await db.todo.delete({ where: { id: data.id } });
+	return { success: true };
+});
+```
+
+```svelte
+<!-- routes/todos/+page.svelte -->
+<script>
+	import { getTodos, createTodo, toggleTodo, deleteTodo } from './todos.server';
+
+	const todosQuery = getTodos();
+	const todoForm = createTodo.form();
+
+	let todos = $state([]);
+
+	$effect(() => {
+		todosQuery.then(data => todos = data);
+	});
+
+	async function handleSubmit(e) {
+		e.preventDefault();
+		const result = await todoForm.submit();
+
+		if (result.todo) {
+			await todosQuery.refresh();
+			todoForm.reset();
+		}
+	}
+
+	async function handleToggle(id) {
+		await toggleTodo({ id });
+		await todosQuery.refresh();
+	}
+
+	async function handleDelete(id) {
+		if (confirm('Delete this todo?')) {
+			await deleteTodo({ id });
+			await todosQuery.refresh();
+		}
+	}
+</script>
+
+<div class="max-w-2xl mx-auto p-6">
+	<h1 class="text-3xl font-bold mb-6">Todos</h1>
+
+	<!-- Create Form -->
+	<form
+		{...todoForm.props}
+		onsubmit={handleSubmit}
+		class="mb-6"
+	>
+		<div class="flex gap-2">
+			<input
+				type="text"
+				name="text"
+				placeholder="Add a todo..."
+				class="flex-1 px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+				class:border-red-500={todoForm.errors?.text}
+			/>
+			<button
+				type="submit"
+				disabled={todoForm.submitting}
+				class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600
+					disabled:opacity-50"
+			>
+				{todoForm.submitting ? 'Adding...' : 'Add'}
+			</button>
+		</div>
+
+		{#if todoForm.errors?.text}
+			<p class="mt-1 text-sm text-red-500">{todoForm.errors.text}</p>
+		{/if}
+	</form>
+
+	<!-- Todo List -->
+	<ul class="space-y-2">
+		{#each todos as todo}
+			<li
+				class="flex items-center gap-3 p-3 border rounded
+					bg-white hover:bg-gray-50 transition-colors"
+			>
+				<input
+					type="checkbox"
+					checked={todo.completed}
+					onchange={() => handleToggle(todo.id)}
+					class="h-5 w-5 rounded border-gray-300
+						text-blue-600 focus:ring-blue-500"
+				/>
+				<span
+					class="flex-1 {todo.completed ? 'line-through text-gray-500' : ''}"
+				>
+					{todo.text}
+				</span>
+				<button
+					onclick={() => handleDelete(todo.id)}
+					class="px-3 py-1 text-sm bg-red-500 text-white rounded
+						hover:bg-red-600 transition-colors"
+				>
+					Delete
+				</button>
+			</li>
+		{/each}
+
+		{#if todos.length === 0}
+			<li class="text-center text-gray-500 py-8">
+				No todos yet. Add one above!
+			</li>
+		{/if}
+	</ul>
+</div>
+```
+
+### Authentication with Remote Functions
+
+```ts
+// routes/auth/auth.server.ts
+import { form, getRequestEvent } from '$app/server';
+import { z } from 'zod';
+import { hash, verify } from '$lib/server/auth';
+
+const loginSchema = z.object({
+	email: z.string().email('Invalid email'),
+	password: z.string().min(8, 'Password must be at least 8 characters')
+});
+
+export const login = form(loginSchema, async (data) => {
+	const event = getRequestEvent();
+
+	const user = await db.user.findUnique({
+		where: { email: data.email }
+	});
+
+	if (!user || !await verify(data.password, user.passwordHash)) {
+		throw new Error('Invalid credentials');
+	}
+
+	// Set session cookie
+	event.cookies.set('session', user.sessionId, {
+		path: '/',
+		httpOnly: true,
+		secure: true,
+		sameSite: 'strict',
+		maxAge: 60 * 60 * 24 * 7 // 1 week
+	});
+
+	return { user: { id: user.id, email: user.email } };
+});
+
+const registerSchema = z.object({
+	email: z.string().email('Invalid email'),
+	password: z.string().min(8, 'Password must be at least 8 characters'),
+	confirmPassword: z.string()
+}).refine(data => data.password === data.confirmPassword, {
+	message: "Passwords don't match",
+	path: ['confirmPassword']
+});
+
+export const register = form(registerSchema, async (data) => {
+	const event = getRequestEvent();
+
+	const existing = await db.user.findUnique({
+		where: { email: data.email }
+	});
+
+	if (existing) {
+		throw new Error('Email already registered');
+	}
+
+	const user = await db.user.create({
+		data: {
+			email: data.email,
+			passwordHash: await hash(data.password)
+		}
+	});
+
+	// Set session cookie
+	const sessionId = crypto.randomUUID();
+	event.cookies.set('session', sessionId, {
+		path: '/',
+		httpOnly: true,
+		secure: true,
+		sameSite: 'strict',
+		maxAge: 60 * 60 * 24 * 7
+	});
+
+	return { user: { id: user.id, email: user.email } };
+});
+```
+
+```svelte
+<!-- routes/auth/login/+page.svelte -->
+<script>
+	import { login } from '../auth.server';
+	import { goto } from '$app/navigation';
+
+	const loginForm = login.form();
+
+	async function handleSubmit(e) {
+		e.preventDefault();
+		const result = await loginForm.submit();
+
+		if (result.user) {
+			goto('/dashboard');
+		}
+	}
+</script>
+
+<div class="max-w-md mx-auto mt-16 p-6 bg-white rounded-lg shadow-lg">
+	<h1 class="text-2xl font-bold mb-6">Login</h1>
+
+	<form {...loginForm.props} onsubmit={handleSubmit} class="space-y-4">
+		<div>
+			<label class="block text-sm font-medium mb-1">Email</label>
+			<input
+				type="email"
+				name="email"
+				required
+				class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+				class:border-red-500={loginForm.errors?.email}
+			/>
+			{#if loginForm.errors?.email}
+				<p class="mt-1 text-sm text-red-600">{loginForm.errors.email}</p>
+			{/if}
+		</div>
+
+		<div>
+			<label class="block text-sm font-medium mb-1">Password</label>
+			<input
+				type="password"
+				name="password"
+				required
+				class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+				class:border-red-500={loginForm.errors?.password}
+			/>
+			{#if loginForm.errors?.password}
+				<p class="mt-1 text-sm text-red-600">{loginForm.errors.password}</p>
+			{/if}
+		</div>
+
+		<button
+			type="submit"
+			disabled={loginForm.submitting}
+			class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600
+				disabled:opacity-50 transition-colors"
+		>
+			{loginForm.submitting ? 'Logging in...' : 'Login'}
+		</button>
+	</form>
+</div>
+```
+
 ## Data Loading Patterns
 
 ### Loading with Skeleton UI
